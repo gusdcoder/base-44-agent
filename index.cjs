@@ -5,9 +5,6 @@
  * This file enables pkg to work with ES modules
  */
 
-const { createRequire } = require('module');
-const require = createRequire(import.meta.url);
-
 // Dynamic import for ES modules
 async function startApp() {
   try {

@@ -4,10 +4,6 @@ config.json
 # Dependencies
 node_modules/
 
-# Lock files
-package-lock.json
-yarn.lock
-
 # IDE / Tool specific
 .claude/
 
