@@ -1,0 +1,6 @@
+{
+  "endpoint": "https://base44.app/api/apps/68b273aab44a3188021f4317/integration-endpoints/Core/InvokeLLM",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiaWxseXJhdWwxOTFAZ21haWwuY29tIiwiZXhwIjoxNzU3MTMwMjgyLCJpYXQiOjE3NTY1MjU0ODJ9.6ygDYvaiiYbPhY8fjxvq6bNlpyU9UNFDKqfGhLkwAhY",
+  "appId": "68b273aab44a3188021f4317",
+  "originUrl": "https://preview--cyber-sec-sentinel-021f4317.base44.app/BinSearch?hide_badge=true"
+}

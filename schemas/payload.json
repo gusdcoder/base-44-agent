@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "Type of payload (reverse shell, web shell, etc.)"
+    },
+    "platform": {
+      "type": "string",
+      "description": "Target platform (Windows, Linux, etc.)"
+    },
+    "language": {
+      "type": "string",
+      "description": "Programming language used"
+    },
+    "code": {
+      "type": "string",
+      "description": "The payload code"
+    },
+    "instructions": {
+      "type": "string",
+      "description": "Instructions on how to use the payload"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "description": "IP address"
+        },
+        "port": {
+          "type": "number",
+          "description": "Port number"
+        }
+      }
+    },
+    "obfuscated": {
+      "type": "boolean",
+      "description": "Whether the payload is obfuscated"
+    }
+  },
+  "required": ["type", "code", "instructions"]
+}

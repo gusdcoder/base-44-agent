@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "properties": {
+    "target": {
+      "type": "string",
+      "description": "The target being reconnaissance"
+    },
+    "techniques": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the technique"
+          },
+          "command": {
+            "type": "string",
+            "description": "Command to execute"
+          },
+          "description": {
+            "type": "string",
+            "description": "What this technique discovers"
+          },
+          "tool": {
+            "type": "string",
+            "description": "Tool required for this technique"
+          }
+        },
+        "required": ["name", "command"]
+      },
+      "description": "List of reconnaissance techniques"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Recommended tools for reconnaissance"
+    },
+    "estimated_time": {
+      "type": "string",
+      "description": "Estimated time to complete reconnaissance"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes and considerations"
+    }
+  },
+  "required": ["target", "techniques"]
+}
