@@ -1,10 +1,16 @@
+ls
+/recon portscan promobank.com.br
+/recon	
+osint promobank.com
+recon promobank.com
+recon to promobank.com
+/agents
+help
+/recon to promobank.com.br
 /agents list
 /agents help
 /workflow run advanced-pentest
-/agents
-help
 filtrar parsed documento grande, que tem url:login:pass e gostaria de fazer um filtro perguntando qual palavra chave 
-ls
 /workflow
 /workflow run basic-recon.md
 /workflow run basic-recon
@@ -23,3 +29,13 @@ help
 /workflow run advanced-pentest
 /agents help
 /agents list
+recon to promobank.com
+/recon to promobank.com.br
+help
+/agents
+recon to promobank.com
+recon promobank.com
+osint promobank.com
+/recon
+/recon portscan promobank.com.br
+ls

@@ -2,10 +2,10 @@
   "name": "billy-llm-cli",
   "version": "1.0.0",
   "description": "LLM CLI tool with structured responses",
-  "main": "pkg-entry.js",
+  "main": "pkg-entry.cjs",
   "type": "module",
   "bin": {
-    "billy-llm": "./pkg-entry.js"
+    "billy-llm": "./pkg-entry.cjs"
   },
   "scripts": {
     "start": "node src/index.js",
@@ -32,8 +32,7 @@
   "license": "MIT",
   "pkg": {
     "scripts": [
-      "src/**/*.js",
-      "pkg-entry.js"
+      "src/**/*.js"
     ],
     "assets": [
       "schemas/**/*",

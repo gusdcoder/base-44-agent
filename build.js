@@ -86,14 +86,13 @@ function updatePackageJson() {
   const packagePath = './package.json';
   const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
   
-  // Set main entry point to pkg-entry.js for pkg
-  packageJson.main = 'pkg-entry.js';
+  // Set main entry point to pkg-entry.cjs for pkg (CommonJS compatibility)
+  packageJson.main = 'pkg-entry.cjs';
   
   // Add pkg configuration
   packageJson.pkg = {
     scripts: [
-      "src/**/*.js",
-      "pkg-entry.js"
+      "src/**/*.js"
     ],
     assets: [
       "schemas/**/*",
@@ -133,9 +132,6 @@ function createCjsWrapper() {
  * This file enables pkg to work with ES modules
  */
 
-const { createRequire } = require('module');
-const require = createRequire(import.meta.url);
-
 // Dynamic import for ES modules
 async function startApp() {
   try {
@@ -162,37 +158,44 @@ function createPkgEntry() {
 
 /**
  * PKG-compatible entry point for Billy LLM CLI
- * Uses static imports instead of dynamic imports for pkg compatibility
+ * Uses CommonJS with dynamic imports for ES modules compatibility
  * Created by BillyC0der - Pentester automation tools
  */
-
-import { LLMClient } from './src/client.js';
-import { setupInteractiveMode } from './src/interactive.js';
-import { handleCLI } from './src/cli-handler.js';
 
 console.log("=== PKG DEBUG INFO ===");
 console.log("process.pkg:", process.pkg ? "present" : "not present");
 console.log("Starting Billy LLM CLI...");
 
-try {
-  // Create client instance
-  const client = new LLMClient();
-  
-  // Handle CLI with custom handler
-  handleCLI(client, setupInteractiveMode);
-  
-} catch (error) {
-  console.error('❌ Billy LLM Error:', error.message);
-  if (process.env.DEBUG) {
-    console.error('Full error:', error);
-    console.error('Stack:', error.stack);
+// Use dynamic imports for ES modules in CommonJS context
+async function startBillyLLM() {
+  try {
+    // Dynamically import ES modules
+    const { LLMClient } = await import('./src/client.js');
+    const { setupInteractiveMode } = await import('./src/interactive.js');
+    const { handleCLI } = await import('./src/cli-handler.js');
+    
+    // Create client instance
+    const client = new LLMClient();
+    
+    // Handle CLI with custom handler
+    handleCLI(client, setupInteractiveMode);
+    
+  } catch (error) {
+    console.error('❌ Billy LLM Error:', error.message);
+    if (process.env.DEBUG) {
+      console.error('Full error:', error);
+      console.error('Stack:', error.stack);
+    }
+    process.exit(1);
   }
-  process.exit(1);
 }
+
+// Start the application
+startBillyLLM();
 `;
 
-  fs.writeFileSync('./pkg-entry.js', entryContent);
-  console.log(chalk.green('✅ Created pkg entry point (pkg-entry.js)'));
+  fs.writeFileSync('./pkg-entry.cjs', entryContent);
+  console.log(chalk.green('✅ Created pkg entry point (pkg-entry.cjs)'));
 }
 
 // Build for specific target
@@ -208,35 +211,31 @@ function buildTarget(target) {
     execSync(command, { stdio: 'inherit' });
     
     // The output will be based on package.json name
-    const baseName = JSON.parse(fs.readFileSync('./package.json', 'utf8')).name || 'pkg-entry';
+    const baseName = JSON.parse(fs.readFileSync('./package.json', 'utf8')).name || 'billy-llm-cli';
     const defaultOutput = path.join(buildConfig.outputDir, baseName);
     const platformOutput = outputPath + (target.includes('win') ? '.exe' : '');
     
-    // Rename output to include platform if different
-    if (fs.existsSync(defaultOutput + (target.includes('win') ? '.exe' : '')) && defaultOutput !== outputPath) {
-      fs.renameSync(defaultOutput + (target.includes('win') ? '.exe' : ''), platformOutput);
-    } else if (fs.existsSync(platformOutput)) {
-      // Output already has correct name
-    } else {
-      // Look for any output file that matches the pattern
-      const files = fs.readdirSync(buildConfig.outputDir);
-      const outputFile = files.find(file => 
-        file.includes(target.split('-').slice(1).join('-')) || 
-        file.startsWith('pkg-entry')
-      );
-      if (outputFile) {
-        const fullOutputPath = path.join(buildConfig.outputDir, outputFile);
-        fs.renameSync(fullOutputPath, platformOutput);
+    // Rename output to include platform if needed
+    try {
+      if (fs.existsSync(defaultOutput) && !target.includes('win')) {
+        // Linux/macOS executable without extension
+        fs.renameSync(defaultOutput, platformOutput);
+      } else if (fs.existsSync(defaultOutput + '.exe') && target.includes('win')) {
+        // Windows executable with .exe extension
+        fs.renameSync(defaultOutput + '.exe', platformOutput);
       }
-    }
-    
-    console.log(chalk.green(`✅ Built: ${platformOutput}`));
-    
-    // Get file size
-    if (fs.existsSync(platformOutput)) {
-      const stats = fs.statSync(platformOutput);
-      const sizeInMB = (stats.size / 1024 / 1024).toFixed(2);
-      console.log(chalk.gray(`   Size: ${sizeInMB} MB\n`));
+      
+      console.log(chalk.green(`✅ Built: ${platformOutput}`));
+      
+      // Get file size
+      if (fs.existsSync(platformOutput)) {
+        const stats = fs.statSync(platformOutput);
+        const sizeInMB = (stats.size / 1024 / 1024).toFixed(2);
+        console.log(chalk.gray(`   Size: ${sizeInMB} MB\n`));
+      }
+    } catch (renameError) {
+      console.log(chalk.yellow(`⚠️  Output file created but rename failed: ${renameError.message}`));
+      console.log(chalk.blue(`📁 Check dist directory for generated files`));
     }
     
   } catch (error) {
