@@ -37,6 +37,18 @@ if (!(Test-Path "pentest-projects")) {
     Write-Host "📁 Created pentest-projects directory" -ForegroundColor Green
 }
 
+# Install billy-llm command globally for daily use
+Write-Host "🔧 Installing billy-llm command globally..." -ForegroundColor Yellow
+npm install -g .
+
+# Verify global installation
+if (Get-Command "billy-llm" -ErrorAction SilentlyContinue) {
+    Write-Host "✅ billy-llm command installed globally!" -ForegroundColor Green
+    Write-Host "   You can now use 'billy-llm' from anywhere in PowerShell" -ForegroundColor Gray
+} else {
+    Write-Host "⚠️  Global installation may have failed. Try running manually: npm install -g ." -ForegroundColor Yellow
+}
+
 Write-Host "`n🚀 Setup complete! Available commands:" -ForegroundColor Green
 Write-Host "  billy-llm i                  - Start interactive mode" -ForegroundColor Gray
 Write-Host "  billy-llm i -s exploit.json  - Start with exploit schema" -ForegroundColor Gray

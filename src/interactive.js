@@ -1,15 +1,65 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import fs from 'fs';
+import readline from 'readline';
 import { SchemaValidator } from './schema-validator.js';
 import { exploitTemplates, payloadTemplates, reconTemplates } from './templates.js';
 import { Orchestrator } from './orchestrator.js';
 
 const validator = new SchemaValidator();
 
+// Command history management
+let commandHistory = [];
+let historyFile = './billy-llm-history.txt';
+
+function loadHistory() {
+  try {
+    if (fs.existsSync(historyFile)) {
+      const history = fs.readFileSync(historyFile, 'utf8').split('\n').filter(line => line.trim() !== '');
+      commandHistory = history.slice(-1000); // Keep last 1000 commands
+    }
+  } catch (error) {
+    console.log(chalk.yellow('⚠️ Could not load command history'));
+  }
+}
+
+function saveHistory() {
+  try {
+    fs.writeFileSync(historyFile, commandHistory.join('\n'));
+  } catch (error) {
+    console.log(chalk.yellow('⚠️ Could not save command history'));
+  }
+}
+
+function addToHistory(command) {
+  if (command && command.trim() !== '' && command !== commandHistory[commandHistory.length - 1]) {
+    commandHistory.push(command);
+    if (commandHistory.length > 1000) {
+      commandHistory = commandHistory.slice(-1000);
+    }
+    saveHistory();
+  }
+}
+
+function createReadlineInterface() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    history: commandHistory,
+    historySize: 1000,
+    removeHistoryDuplicates: true
+  });
+
+  return rl;
+}
+
 export async function setupInteractiveMode(client, options = {}) {
   console.log(chalk.blue('🤖 Welcome to Billy LLM Interactive Mode - Pentester Edition'));
-  console.log(chalk.gray('Type "exit" to quit, "help" for commands\n'));
+  console.log(chalk.gray('Type "exit" to quit, "help" for commands'));
+  console.log(chalk.gray('Use ↑/↓ arrow keys to navigate command history\n'));
+
+  // Load command history
+  loadHistory();
 
   // Load initial schema if provided
   if (options.schema) {
@@ -35,119 +85,134 @@ export async function setupInteractiveMode(client, options = {}) {
   // Set default context option
   client.defaultContext = options.context || false;
 
+  // Create readline interface with history
+  const rl = createReadlineInterface();
+
+  // Function to ask for input with history support
+  const askQuestion = () => {
+    return new Promise((resolve) => {
+      rl.question(chalk.cyan('You: '), (answer) => {
+        resolve(answer);
+      });
+    });
+  };
+
   while (true) {
     try {
-      const answers = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'prompt',
-          message: chalk.cyan('You:'),
-          validate: (input) => input.trim() !== '' || 'Please enter a prompt'
-        }
-      ]);
+      const prompt = await askQuestion();
+      const trimmedPrompt = prompt.trim();
 
-      const prompt = answers.prompt.trim();
+      if (trimmedPrompt === '') continue;
 
-      if (prompt.toLowerCase() === 'exit') {
+      // Add to history
+      addToHistory(trimmedPrompt);
+
+      if (trimmedPrompt.toLowerCase() === 'exit') {
         console.log(chalk.yellow('Goodbye! 👋'));
+        rl.close();
         break;
       }
 
-      if (prompt.toLowerCase() === 'help') {
+      if (trimmedPrompt.toLowerCase() === 'help') {
         showHelp();
         continue;
       }
 
-      if (prompt.startsWith('/schema')) {
-        await handleSchemaCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/history')) {
+        await handleHistoryCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/config')) {
-        await handleConfigCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/schema')) {
+        await handleSchemaCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/exploit')) {
-        await handleExploitCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/config')) {
+        await handleConfigCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/payload')) {
-        await handlePayloadCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/exploit')) {
+        await handleExploitCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/recon')) {
-        await handleReconCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/payload')) {
+        await handlePayloadCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/reverse')) {
-        await handleReverseCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/recon')) {
+        await handleReconCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/enum')) {
-        await handleEnumCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/reverse')) {
+        await handleReverseCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/snippet')) {
-        await handleSnippetCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/enum')) {
+        await handleEnumCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/template')) {
-        await handleTemplateCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/snippet')) {
+        await handleSnippetCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/pentest')) {
-        await handlePentestCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/template')) {
+        await handleTemplateCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/generate')) {
-        await handleGenerateCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/pentest')) {
+        await handlePentestCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/format')) {
-        await handleFormatCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/generate')) {
+        await handleGenerateCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/analyze')) {
-        await handleAnalyzeCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/format')) {
+        await handleFormatCommand(trimmedPrompt, client);
+        continue;
+      }
+
+      if (trimmedPrompt.startsWith('/analyze')) {
+        await handleAnalyzeCommand(trimmedPrompt, client);
         continue;
       }
 
       // Multi-Agent Orchestrator Commands
-      if (prompt.startsWith('/workflow')) {
-        await handleWorkflowCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/workflow')) {
+        await handleWorkflowCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/orchestrator')) {
-        await handleOrchestratorCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/orchestrator')) {
+        await handleOrchestratorCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/agents')) {
-        await handleAgentsCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/agents')) {
+        await handleAgentsCommand(trimmedPrompt, client);
         continue;
       }
 
-      if (prompt.startsWith('/jobs')) {
-        await handleJobsCommand(prompt, client);
+      if (trimmedPrompt.startsWith('/jobs')) {
+        await handleJobsCommand(trimmedPrompt, client);
         continue;
       }
 
       console.log(chalk.gray('Thinking...'));
       
       const response = await client.invoke(
-        prompt, 
+        trimmedPrompt, 
         client.currentSchema,
         client.defaultContext
       );
@@ -161,12 +226,20 @@ export async function setupInteractiveMode(client, options = {}) {
       console.log();
     }
   }
+
+  // Save history before exit
+  saveHistory();
 }
 
 function showHelp() {
   console.log(chalk.blue('\n📖 Available Commands:'));
   console.log(chalk.gray('  help                     - Show this help'));
   console.log(chalk.gray('  exit                     - Exit interactive mode'));
+  console.log(chalk.gray('  ↑/↓ arrows               - Navigate command history'));
+  console.log(chalk.gray('  /history [n]             - Show last n commands (default: 20)'));
+  console.log(chalk.gray('  /history search <term>   - Search command history'));
+  console.log(chalk.gray('  /history clear           - Clear command history'));
+  console.log(chalk.gray('  /history save [file]     - Save history to file'));
   
   console.log(chalk.blue('\n🔧 Configuration:'));
   console.log(chalk.gray('  /schema <file>           - Use schema from file'));
@@ -186,6 +259,14 @@ function showHelp() {
   console.log(chalk.gray('  /generate <type>         - Generate custom code'));
   console.log(chalk.gray('  /format <type>           - Format and save outputs'));
   console.log(chalk.gray('  /analyze <tool>          - Analyze tool outputs'));
+
+  console.log(chalk.blue('\n🤖 Multi-Agent Orchestrator:'));
+  console.log(chalk.gray('  /workflow list           - List available workflows'));
+  console.log(chalk.gray('  /workflow load <path>    - Load workflow file'));
+  console.log(chalk.gray('  /workflow run <id>       - Execute workflow'));
+  console.log(chalk.gray('  /orchestrator status     - System status'));
+  console.log(chalk.gray('  /agents list             - List available agents'));
+  console.log(chalk.gray('  /jobs list               - List active jobs'));
   
   console.log(chalk.blue('\n💬 Normal Usage:'));
   console.log(chalk.gray('  Any other text           - Send to LLM\n'));
@@ -1480,4 +1561,74 @@ async function handleJobsCommand(prompt, client) {
   }
 }
 
-// Signed by BillyC0der - Multi-Agent Orchestrator System
+async function handleHistoryCommand(prompt, client) {
+  const args = prompt.split(' ').slice(1);
+  const subcommand = args[0];
+
+  try {
+    switch (subcommand) {
+      case 'clear':
+        commandHistory = [];
+        saveHistory();
+        console.log(chalk.green('✅ Command history cleared'));
+        break;
+
+      case 'save':
+        const filename = args[1] || `billy-llm-history-${Date.now()}.txt`;
+        try {
+          fs.writeFileSync(filename, commandHistory.join('\n'));
+          console.log(chalk.green(`✅ History saved to: ${filename}`));
+        } catch (error) {
+          console.log(chalk.red(`❌ Could not save history: ${error.message}`));
+        }
+        break;
+
+      case 'search':
+        const searchTerm = args.slice(1).join(' ');
+        if (!searchTerm) {
+          console.log(chalk.red('❌ Please provide search term'));
+          console.log(chalk.gray('Usage: /history search <term>'));
+          return;
+        }
+
+        console.log(chalk.cyan(`🔍 Searching history for: "${searchTerm}"`));
+        const matches = commandHistory.filter((cmd, index) => 
+          cmd.toLowerCase().includes(searchTerm.toLowerCase())
+        ).slice(-20); // Show last 20 matches
+
+        if (matches.length === 0) {
+          console.log(chalk.yellow('No matches found'));
+        } else {
+          matches.forEach((cmd, index) => {
+            const historyIndex = commandHistory.indexOf(cmd) + 1;
+            console.log(chalk.blue(`${historyIndex.toString().padStart(4)}: `) + chalk.gray(cmd));
+          });
+          console.log(chalk.cyan(`\nFound ${matches.length} matches`));
+        }
+        break;
+
+      case 'list':
+      default:
+        const count = parseInt(args[0]) || 20;
+        const recent = commandHistory.slice(-count);
+        
+        if (recent.length === 0) {
+          console.log(chalk.yellow('No command history available'));
+        } else {
+          console.log(chalk.cyan(`📜 Last ${recent.length} commands:`));
+          recent.forEach((cmd, index) => {
+            const historyIndex = commandHistory.length - recent.length + index + 1;
+            console.log(chalk.blue(`${historyIndex.toString().padStart(4)}: `) + chalk.gray(cmd));
+          });
+          
+          console.log(chalk.gray(`\nTotal history: ${commandHistory.length} commands`));
+          console.log(chalk.gray('Use ↑/↓ arrow keys to navigate, /history <n> to show more'));
+        }
+        break;
+    }
+  } catch (error) {
+    console.log(chalk.red(`❌ History error: ${error.message}`));
+  }
+}
+
+// Signed by BillyC0der - Multi-Agent Orchestrator System with History Support
