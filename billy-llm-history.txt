@@ -1,8 +1,14 @@
+/agents list
+/agents help
+/workflow run advanced-pentest
+/agents
+help
+filtrar parsed documento grande, que tem url:login:pass e gostaria de fazer um filtro perguntando qual palavra chave 
+ls
 /workflow
 /workflow run basic-recon.md
 /workflow run basic-recon
 /workflow list
-help
 /work]
 help
 /workflow
@@ -10,3 +16,10 @@ help
 /workflow run basic-recon
 /workflow run basic-recon.md
 /workflow
+ls
+filtrar parsed documento grande, que tem url:login:pass e gostaria de fazer um filtro perguntando qual palavra chave
+help
+/agents
+/workflow run advanced-pentest
+/agents help
+/agents list
